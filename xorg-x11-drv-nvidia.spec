@@ -9,7 +9,7 @@
 Name:            xorg-x11-drv-nvidia
 Epoch:           1
 Version:         375.26
-Release:         1%{?dist}
+Release:         4%{?dist}
 Summary:         NVIDIA's proprietary display driver for NVIDIA graphic cards
 
 Group:           User Interface/X Hardware Support
@@ -23,6 +23,7 @@ Source3:         nvidia-xorg.conf
 Source5:         00-avoid-glamor.conf
 Source6:         blacklist-nouveau.conf
 Source7:         alternate-install-present
+Source8:         nvidia-old.conf
 Source9:         nvidia-settings.desktop
 Source10:        nvidia.conf
 Source11:        00-ignoreabi.conf
@@ -261,11 +262,13 @@ rm $RPM_BUILD_ROOT%{_nvidia_libdir}/libnvidia-{cfg,tls}.so
 
 #Install static driver dependant configuration files
 mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/X11/xorg.conf.d
-install -pm 0644 %{SOURCE2} $RPM_BUILD_ROOT%{_sysconfdir}/X11/xorg.conf.d
 install -pm 0644 %{SOURCE5} $RPM_BUILD_ROOT%{_sysconfdir}/X11/xorg.conf.d
+install -pm 0644 %{SOURCE3} $RPM_BUILD_ROOT%{_sysconfdir}/X11/
+%if 0%{?fedora} <= 24
+install -pm 0644 %{SOURCE2} $RPM_BUILD_ROOT%{_sysconfdir}/X11/xorg.conf.d
 sed -i -e 's|@LIBDIR@|%{_libdir}|g' $RPM_BUILD_ROOT%{_sysconfdir}/X11/xorg.conf.d/99-nvidia.conf
 touch -r %{SOURCE2} $RPM_BUILD_ROOT%{_sysconfdir}/X11/xorg.conf.d/99-nvidia.conf
-install -pm 0644 %{SOURCE3} $RPM_BUILD_ROOT%{_sysconfdir}/X11/
+%endif
 # Comment Xorg abi override
 #install -pm 0644 %{SOURCE11} $RPM_BUILD_ROOT%{_sysconfdir}/X11/xorg.conf.d
 
@@ -293,9 +296,15 @@ mkdir -p $RPM_BUILD_ROOT%{_datadir}/nvidia
 install -p -m 0644 nvidia-application-profiles-%{version}-{rc,key-documentation} $RPM_BUILD_ROOT%{_datadir}/nvidia
 
 #Install the output class configuration file - xorg-server >= 1.16
-%if 0%{?fedora} >= 21
+%if 0%{?fedora} >= 25
 mkdir -p $RPM_BUILD_ROOT%{_datadir}/X11/xorg.conf.d
 install -pm 0644 %{SOURCE10} $RPM_BUILD_ROOT%{_datadir}/X11/xorg.conf.d/nvidia.conf
+sed -i -e 's|@LIBDIR@|%{_libdir}|g' $RPM_BUILD_ROOT%{_datadir}/X11/xorg.conf.d/nvidia.conf
+touch -r %{SOURCE10} $RPM_BUILD_ROOT%{_datadir}/X11/xorg.conf.d/nvidia.conf
+%endif
+%if 0%{?fedora} <= 24
+mkdir -p $RPM_BUILD_ROOT%{_datadir}/X11/xorg.conf.d
+install -pm 0644 %{SOURCE8} $RPM_BUILD_ROOT%{_datadir}/X11/xorg.conf.d/nvidia.conf
 %endif
 
 #Avoid prelink to mess with nvidia libs - rfbz#3258
@@ -438,7 +447,9 @@ fi ||:
 %config %{_sysconfdir}/glvnd/egl_vendor.d/10_nvidia.json
 %dir %{_sysconfdir}/nvidia
 %ghost  %{_sysconfdir}/X11/xorg.conf.d/nvidia.conf
+%if 0%{?fedora} <= 24
 %config %{_sysconfdir}/X11/xorg.conf.d/99-nvidia.conf
+%endif
 %config %{_sysconfdir}/X11/xorg.conf.d/00-avoid-glamor.conf
 # Comment Xorg abi override
 #%%config %%{_sysconfdir}/X11/xorg.conf.d/00-ignoreabi.conf
@@ -555,6 +566,15 @@ fi ||:
 %{_nvidia_libdir}/libGLX_nvidia.so
 
 %changelog
+* Mon Dec 19 2016 leigh scott <leigh123linux@googlemail.com> - 1:375.26-4
+- Add conditionals for f24
+
+* Mon Dec 19 2016 leigh scott <leigh123linux@googlemail.com> - 1:375.26-3
+- Fix nvidia.conf
+
+* Sun Dec 18 2016 leigh scott <leigh123linux@googlemail.com> - 1:375.26-2
+- Change conf files for Prime support
+
 * Wed Dec 14 2016 leigh scott <leigh123linux@googlemail.com> - 1:375.26-1
 - Update to 375.26 release
 
