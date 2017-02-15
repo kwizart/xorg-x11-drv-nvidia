@@ -13,8 +13,8 @@
 
 Name:            xorg-x11-drv-nvidia
 Epoch:           1
-Version:         375.26
-Release:         11%{?dist}
+Version:         375.39
+Release:         1%{?dist}
 Summary:         NVIDIA's proprietary display driver for NVIDIA graphic cards
 
 Group:           User Interface/X Hardware Support
@@ -61,9 +61,6 @@ Requires:        %{name}-libs%{?_isa} = %{?epoch}:%{version}-%{release}
 # filesystem is needed as we don't own %%{_libdir} or %%{_libdir}/tls
 Requires:        filesystem
 Requires:        xorg-x11-server-Xorg%{?_isa} >= 1.19.0-3
-Requires:        mesa-libEGL%{?_isa} >= 13.0.3-3
-Requires:        mesa-libGL%{?_isa} >= 13.0.3-3
-Requires:        mesa-libGLES%{?_isa} >= 13.0.3-3
 %endif
 
 Obsoletes:       %{_nvidia_serie}-kmod < %{?epoch}:%{version}
@@ -111,8 +108,8 @@ Requires:        %{name}-libs%{?_isa} = %{?epoch}:%{version}-%{release}
 Requires:        %{name}-cuda%{?_isa} = %{?epoch}:%{version}-%{release}
 
 #Don't put an epoch here
-Provides:        cuda-drivers-devel = %{version}
-Provides:        cuda-drivers-devel%{?_isa} = %{version}
+Provides:        cuda-drivers-devel = %{version}-100
+Provides:        cuda-drivers-devel%{?_isa} = %{version}-100
 
 %description devel
 This package provides the development files of the %{name} package,
@@ -128,8 +125,8 @@ Provides:        nvidia-persistenced = %{version}-%{release}
 Conflicts:       xorg-x11-drv-nvidia-340xx-cuda
 
 #Don't put an epoch here
-Provides:        cuda-drivers = %{version}
-Provides:        cuda-drivers%{?_isa} = %{version}
+Provides:        cuda-drivers = %{version}-100
+Provides:        cuda-drivers%{?_isa} = %{version}-100
 
 %description cuda
 This package provides the CUDA driver libraries.
@@ -153,6 +150,12 @@ Requires:        libglvnd-egl%{?_isa} >= 0.2
 Requires:        libglvnd-gles%{?_isa} >= 0.2
 Requires:        libglvnd-glx%{?_isa} >= 0.2
 Requires:        libglvnd-opengl%{?_isa} >= 0.2
+Requires:        mesa-libEGL%{?_isa} >= 13.0.3-3
+Requires:        mesa-libGL%{?_isa} >= 13.0.3-3
+Requires:        mesa-libGLES%{?_isa} >= 13.0.3-3
+%ifarch x86_64
+Requires:        (%{name}-libs(x86-32) = %{?epoch}:%{version}-%{release} if libGL(x86-32))
+%endif
 %endif
 %ifarch x86_64 i686
 Requires:        vulkan-filesystem
@@ -623,6 +626,9 @@ fi ||:
 %{_nvidia_libdir}/libGLX_nvidia.so
 
 %changelog
+* Tue Feb 14 2017 Leigh Scott <leigh123linux@googlemail.com> - 1:375.39-1
+- Update to 375.39 release
+
 * Thu Jan 19 2017 Leigh Scott <leigh123linux@googlemail.com> - 1:375.26-11
 - Fix file conflict with filesystem
 
