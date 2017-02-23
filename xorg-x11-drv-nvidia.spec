@@ -14,7 +14,7 @@
 Name:            xorg-x11-drv-nvidia
 Epoch:           1
 Version:         375.39
-Release:         1%{?dist}
+Release:         2%{?dist}
 Summary:         NVIDIA's proprietary display driver for NVIDIA graphic cards
 
 Group:           User Interface/X Hardware Support
@@ -105,7 +105,8 @@ http://rpmfusion.org/Howto/nVidia
 Summary:         Development files for %{name}
 Group:           Development/Libraries
 Requires:        %{name}-libs%{?_isa} = %{?epoch}:%{version}-%{release}
-Requires:        %{name}-cuda%{?_isa} = %{?epoch}:%{version}-%{release}
+Requires:        %{name}-cuda = %{?epoch}:%{version}-%{release}
+Requires:        %{name}-cuda-libs%{?_isa} = %{?epoch}:%{version}-%{release}
 
 #Don't put an epoch here
 Provides:        cuda-drivers-devel = %{version}-100
@@ -116,9 +117,10 @@ This package provides the development files of the %{name} package,
 such as OpenGL headers.
 
 %package cuda
-Summary:         CUDA libraries for %{name}
+Summary:         CUDA driver for %{name}
 Group:           Development/Libraries
 Requires:        %{_nvidia_serie}-kmod >= %{?epoch}:%{version}
+Requires:        %{name}-cuda-libs%{?_isa} = %{?epoch}:%{version}-%{release}
 Provides:        nvidia-modprobe = %{version}-%{release}
 Provides:        nvidia-persistenced = %{version}-%{release}
 
@@ -129,6 +131,14 @@ Provides:        cuda-drivers = %{version}-100
 Provides:        cuda-drivers%{?_isa} = %{version}-100
 
 %description cuda
+This package provides the CUDA driver.
+
+%package cuda-libs
+Summary:         CUDA libraries for %{name}
+Group:           Development/Libraries
+Requires:        %{name}-cuda = %{?epoch}:%{version}-%{release}
+
+%description cuda-libs
 This package provides the CUDA driver libraries.
 
 %package kmodsrc
@@ -153,8 +163,11 @@ Requires:        libglvnd-opengl%{?_isa} >= 0.2
 Requires:        mesa-libEGL%{?_isa} >= 13.0.3-3
 Requires:        mesa-libGL%{?_isa} >= 13.0.3-3
 Requires:        mesa-libGLES%{?_isa} >= 13.0.3-3
+# Boolean dependencies are not yet allowed in fedora, only for testing
+%if 0%{?fedora} >= 26
 %ifarch x86_64
 Requires:        (%{name}-libs(x86-32) = %{?epoch}:%{version}-%{release} if libGL(x86-32))
+%endif
 %endif
 %endif
 %ifarch x86_64 i686
@@ -314,8 +327,10 @@ desktop-file-install --vendor "" \
 %endif
     nvidia-settings.desktop
 
+%if 0%{?rhel} < 8 || 0%{?fedora} <= 24
 #Workaround for self made xorg.conf using a Files section.
 ln -fs ../../%{_nvidia_serie}/xorg $RPM_BUILD_ROOT%{_libdir}/xorg/modules/%{_nvidia_serie}-%{version}
+%endif
 
 %if 0%{?rhel} > 6 || 0%{?fedora} <= 24
 #Workaround for cuda availability - rfbz#2916
@@ -401,7 +416,7 @@ if [ "$1" -eq "1" ]; then
       ISGRUB1="--grub"
       GFXPAYLOAD="vga=normal"
   else
-      echo "GRUB_GFXPAYLOAD_LINUX=text" >> %{_sysconfdir}/default/grub
+      #echo "GRUB_GFXPAYLOAD_LINUX=text" >> %{_sysconfdir}/default/grub
       if [ -f /boot/grub2/grub.cfg ]; then
         /sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
       fi
@@ -417,7 +432,7 @@ if [ "$1" -eq "1" ]; then
     for kernel in ${KERNELS} ; do
       /sbin/grubby $ISGRUB1 \
         --update-kernel=${kernel} \
-        --args="nouveau.modeset=0 rd.driver.blacklist=nouveau video=vesa:off $GFXPAYLOAD" \
+        --args="nouveau.modeset=0 rd.driver.blacklist=nouveau $GFXPAYLOAD" \
          &>/dev/null
     done
   fi
@@ -431,6 +446,8 @@ fi || :
 %if 0%{?rhel} > 6 || 0%{?fedora} >= 18
 %systemd_post nvidia-persistenced.service
 %endif
+
+%post cuda-libs -p /sbin/ldconfig
 
 
 %preun
@@ -480,6 +497,8 @@ fi ||:
 %systemd_postun_with_restart nvidia-persistenced.service
 %endif
 
+%postun cuda-libs -p /sbin/ldconfig
+
 %files
 %defattr(-,root,root,-)
 %doc nvidiapkg/LICENSE
@@ -509,7 +528,9 @@ fi ||:
 %dir %{_nvidia_xorgdir}
 %{_nvidia_xorgdir}/*.so*
 %{_libdir}/xorg/modules/drivers/nvidia_drv.so
+%if 0%{?rhel} < 8 || 0%{?fedora} <= 24
 %{_libdir}/xorg/modules/%{_nvidia_serie}-%{version}
+%endif
 # It's time that nvidia-settings used gtk3
 %ifarch %{arm}
 %{_nvidia_libdir}/libnvidia-gtk2.so*
@@ -580,9 +601,6 @@ fi ||:
 %if 0%{?rhel} > 6 || 0%{?fedora} <= 24
 %{_libdir}/libcuda.so*
 %endif
-%{_nvidia_libdir}/libcuda.so*
-%{_nvidia_libdir}/libnvcuvid.so*
-%{_nvidia_libdir}/libnvidia-encode.so*
 %{_nvidia_libdir}/libnvidia-fatbinaryloader.so*
 %{_nvidia_libdir}/libnvidia-ml.so*
 %{_nvidia_libdir}/libnvidia-ptxjitcompiler.so*
@@ -597,6 +615,11 @@ fi ||:
 %{_mandir}/man1/nvidia-cuda-mps-control.1.*
 %{_mandir}/man1/nvidia-persistenced.1.*
 %{_mandir}/man1/nvidia-modprobe.1.*
+
+%files cuda-libs
+%{_nvidia_libdir}/libcuda.so*
+%{_nvidia_libdir}/libnvcuvid.so*
+%{_nvidia_libdir}/libnvidia-encode.so*
 
 %files devel
 %defattr(-,root,root,-)
@@ -626,6 +649,11 @@ fi ||:
 %{_nvidia_libdir}/libGLX_nvidia.so
 
 %changelog
+* Thu Feb 16 2017 Nicolas Chauvet <kwizart@gmail.com> - 1:375.39-2
+- Avoid xorg dir symlink on fedora 25+
+- Drop GFXPAYLOAD and video=vesa:off
+- Implement cuda-libs (for steam)
+
 * Tue Feb 14 2017 Leigh Scott <leigh123linux@googlemail.com> - 1:375.39-1
 - Update to 375.39 release
 
