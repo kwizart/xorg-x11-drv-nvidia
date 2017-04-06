@@ -326,7 +326,7 @@ desktop-file-install --vendor "" \
     nvidia-settings.desktop
 
 #Alternate-install-present is checked by the nvidia .run
-install -p -m 0644 %{SOURCE7}            $RPM_BUILD_ROOT%{_libdir}
+install -p -m 0644 %{SOURCE7}            $RPM_BUILD_ROOT%{_nvidia_libdir}
 
 #install the NVIDIA supplied application profiles
 mkdir -p $RPM_BUILD_ROOT%{_datadir}/nvidia
@@ -465,7 +465,6 @@ fi ||:
 %{_bindir}/nvidia-settings
 %{_bindir}/nvidia-xconfig
 # Xorg libs that do not need to be multilib
-%dir %{_nvidia_libdir}
 %dir %{_nvidia_xorgdir}
 %{_nvidia_xorgdir}/libglx.so
 %{_nvidia_xorgdir}/libglx.so.%{version}
@@ -505,7 +504,8 @@ fi ||:
 %config %{_sysconfdir}/ld.so.conf.d/nvidia-%{_lib}.conf
 %dir %{_libdir}
 %endif
-%{_libdir}/alternate-install-present
+%dir %{_nvidia_libdir}
+%{_nvidia_libdir}/alternate-install-present
 %{_libdir}/libEGL_nvidia.so.0
 %{_libdir}/libEGL_nvidia.so.%{version}
 %{_libdir}/libGLESv1_CM_nvidia.so.1
