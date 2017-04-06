@@ -212,7 +212,6 @@ cp -a \
     libGLX_nvidia.so.%{version} \
     libnvcuvid.so.%{version} \
     libnvidia-cfg.so.%{version} \
-    libnvidia-compiler.so.%{version} \
     libnvidia-eglcore.so.%{version} \
     libnvidia-encode.so.%{version} \
     libnvidia-fatbinaryloader.so.%{version} \
@@ -222,13 +221,17 @@ cp -a \
     libnvidia-gtk*.so.%{version} \
     libnvidia-ifr.so.%{version} \
     libnvidia-ml.so.%{version} \
-    libnvidia-opencl.so.%{version} \
     libnvidia-ptxjitcompiler.so.%{version} \
     $RPM_BUILD_ROOT%{_libdir}/
 
 # Use the correct TLS implementation for x86_64/i686, already ok on ARM
+# OpenCL is only available on x86_64/i686.
 %ifarch x86_64 i686
-cp -af tls/libnvidia-tls.so* $RPM_BUILD_ROOT%{_libdir}/
+cp -af \
+    tls/libnvidia-tls.so* \
+    libnvidia-compiler.so.%{version} \
+    libnvidia-opencl.so.%{version} \
+    $RPM_BUILD_ROOT%{_libdir}/
 %else
 cp -af libnvidia-tls.so* $RPM_BUILD_ROOT%{_libdir}/
 %endif
