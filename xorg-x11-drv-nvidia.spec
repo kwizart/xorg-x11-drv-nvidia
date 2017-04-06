@@ -198,12 +198,12 @@ echo "Nothing to build"
 
 
 %install
-rm -rf $RPM_BUILD_ROOT
+rm -rf %{buildroot}
 
 cd nvidiapkg
 
 # Install only required libraries
-mkdir -p $RPM_BUILD_ROOT%{_libdir}
+mkdir -p %{buildroot}%{_libdir}
 cp -a \
     libcuda.so.%{version} \
     libEGL_nvidia.so.%{version} \
@@ -222,7 +222,7 @@ cp -a \
     libnvidia-ifr.so.%{version} \
     libnvidia-ml.so.%{version} \
     libnvidia-ptxjitcompiler.so.%{version} \
-    $RPM_BUILD_ROOT%{_libdir}/
+    %{buildroot}%{_libdir}/
 
 # Use the correct TLS implementation for x86_64/i686, already ok on ARM
 # OpenCL is only available on x86_64/i686.
@@ -231,147 +231,147 @@ cp -af \
     tls/libnvidia-tls.so* \
     libnvidia-compiler.so.%{version} \
     libnvidia-opencl.so.%{version} \
-    $RPM_BUILD_ROOT%{_libdir}/
+    %{buildroot}%{_libdir}/
 %else
-cp -af libnvidia-tls.so* $RPM_BUILD_ROOT%{_libdir}/
+cp -af libnvidia-tls.so* %{buildroot}%{_libdir}/
 %endif
 
 # Use ldconfig for libraries with a mismatching SONAME/filename
-ldconfig -vn $RPM_BUILD_ROOT%{_libdir}/
+ldconfig -vn %{buildroot}%{_libdir}/
 
 # Libraries you can link against
 for lib in libcuda libnvcuvid libnvidia-encode; do
-    ln -sf $lib.so.%{version} $RPM_BUILD_ROOT%{_libdir}/$lib.so
+    ln -sf $lib.so.%{version} %{buildroot}%{_libdir}/$lib.so
 done
 
 # Vdpau driver
-install -D -p -m 0755 libvdpau_nvidia.so.%{version} $RPM_BUILD_ROOT%{_libdir}/vdpau/libvdpau_nvidia.so.%{version}
-ln -sf libvdpau_nvidia.so.%{version} $RPM_BUILD_ROOT%{_libdir}/vdpau/libvdpau_nvidia.so.1
+install -D -p -m 0755 libvdpau_nvidia.so.%{version} %{buildroot}%{_libdir}/vdpau/libvdpau_nvidia.so.%{version}
+ln -sf libvdpau_nvidia.so.%{version} %{buildroot}%{_libdir}/vdpau/libvdpau_nvidia.so.1
 
 %if 0%{?rhel} == 7 || 0%{?rhel} == 6 || 0%{?fedora} == 24
 # GlVND
-ln -s %{_libdir}/libGLX_mesa.so.0 $RPM_BUILD_ROOT%{_libdir}/libGLX_indirect.so.0
+ln -s %{_libdir}/libGLX_mesa.so.0 %{buildroot}%{_libdir}/libGLX_indirect.so.0
 %endif
 
 # X DDX driver and GLX extension
-install -p -D -m 0755 libglx.so.%{version} $RPM_BUILD_ROOT%{_nvidia_xorgdir}/libglx.so.%{version}
-ln -sf libglx.so.%{version} $RPM_BUILD_ROOT%{_nvidia_xorgdir}/libglx.so
-install -D -p -m 0755 nvidia_drv.so $RPM_BUILD_ROOT%{_libdir}/xorg/modules/drivers/nvidia_drv.so
+install -p -D -m 0755 libglx.so.%{version} %{buildroot}%{_nvidia_xorgdir}/libglx.so.%{version}
+ln -sf libglx.so.%{version} %{buildroot}%{_nvidia_xorgdir}/libglx.so
+install -D -p -m 0755 nvidia_drv.so %{buildroot}%{_libdir}/xorg/modules/drivers/nvidia_drv.so
 
 %ifarch x86_64 i686
 # OpenCL config
-install    -m 0755         -d $RPM_BUILD_ROOT%{_sysconfdir}/OpenCL/vendors/
-install -p -m 0644 nvidia.icd $RPM_BUILD_ROOT%{_sysconfdir}/OpenCL/vendors/
+install    -m 0755         -d %{buildroot}%{_sysconfdir}/OpenCL/vendors/
+install -p -m 0644 nvidia.icd %{buildroot}%{_sysconfdir}/OpenCL/vendors/
 # Vulkan config
-install    -m 0755         -d $RPM_BUILD_ROOT%{_datadir}/vulkan/icd.d/
-install -p -m 0644 nvidia_icd.json $RPM_BUILD_ROOT%{_datadir}/vulkan/icd.d/
+install    -m 0755         -d %{buildroot}%{_datadir}/vulkan/icd.d/
+install -p -m 0644 nvidia_icd.json %{buildroot}%{_datadir}/vulkan/icd.d/
 %endif
 # EGL config
-install    -m 0755         -d $RPM_BUILD_ROOT%{_datadir}/glvnd/egl_vendor.d/
-install -p -m 0644 10_nvidia.json $RPM_BUILD_ROOT%{_datadir}/glvnd/egl_vendor.d/
+install    -m 0755         -d %{buildroot}%{_datadir}/glvnd/egl_vendor.d/
+install -p -m 0644 10_nvidia.json %{buildroot}%{_datadir}/glvnd/egl_vendor.d/
 
 # ld.so.conf.d file
 %if 0%{?rhel} > 6 || 0%{?fedora} <= 24
-install -m 0755 -d       $RPM_BUILD_ROOT%{_sysconfdir}/ld.so.conf.d/
-echo -e "%{_glvnd_libdir} \n" > $RPM_BUILD_ROOT%{_sysconfdir}/ld.so.conf.d/nvidia-%{_lib}.conf
+install -m 0755 -d       %{buildroot}%{_sysconfdir}/ld.so.conf.d/
+echo -e "%{_glvnd_libdir} \n" > %{buildroot}%{_sysconfdir}/ld.so.conf.d/nvidia-%{_lib}.conf
 %endif
 
 # Blacklist nouveau, autoload nvidia-uvm module after nvidia module
-install    -m 0755 -d                     $RPM_BUILD_ROOT%{_modprobe_d}/
-install -p -m 0644 %{SOURCE6} %{SOURCE15} $RPM_BUILD_ROOT%{_modprobe_d}/
+install    -m 0755 -d                     %{buildroot}%{_modprobe_d}/
+install -p -m 0644 %{SOURCE6} %{SOURCE15} %{buildroot}%{_modprobe_d}/
 
 # UDev rules for nvidia-uvm
-install    -m 0755 -d          $RPM_BUILD_ROOT%{_udevrulesdir}
-install -p -m 0644 %{SOURCE14} $RPM_BUILD_ROOT%{_udevrulesdir}
+install    -m 0755 -d          %{buildroot}%{_udevrulesdir}
+install -p -m 0644 %{SOURCE14} %{buildroot}%{_udevrulesdir}
 
 # Install binaries
-install -m 0755 -d $RPM_BUILD_ROOT%{_bindir}
+install -m 0755 -d %{buildroot}%{_bindir}
 install -p -m 0755 nvidia-{bug-report.sh,debugdump,smi,cuda-mps-control,cuda-mps-server,xconfig,settings,persistenced} \
-  $RPM_BUILD_ROOT%{_bindir}
+  %{buildroot}%{_bindir}
 
 # Install headers
-install -m 0755 -d $RPM_BUILD_ROOT%{_includedir}/nvidia/GL/
-install -p -m 0644 {gl.h,glext.h,glx.h,glxext.h} $RPM_BUILD_ROOT%{_includedir}/nvidia/GL/
+install -m 0755 -d %{buildroot}%{_includedir}/nvidia/GL/
+install -p -m 0644 {gl.h,glext.h,glx.h,glxext.h} %{buildroot}%{_includedir}/nvidia/GL/
 
 # Install man pages
-install    -m 0755 -d   $RPM_BUILD_ROOT%{_mandir}/man1/
+install    -m 0755 -d   %{buildroot}%{_mandir}/man1/
 install -p -m 0644 nvidia-{cuda-mps-control,persistenced,settings,smi,xconfig}.1.gz \
-  $RPM_BUILD_ROOT%{_mandir}/man1/
+  %{buildroot}%{_mandir}/man1/
 
 # Install nvidia icon
-mkdir -p $RPM_BUILD_ROOT%{_datadir}/pixmaps
-install -pm 0644 nvidia-settings.png $RPM_BUILD_ROOT%{_datadir}/pixmaps
+mkdir -p %{buildroot}%{_datadir}/pixmaps
+install -pm 0644 nvidia-settings.png %{buildroot}%{_datadir}/pixmaps
 
 #Install static driver dependant configuration files
-mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/X11/xorg.conf.d
+mkdir -p %{buildroot}%{_sysconfdir}/X11/xorg.conf.d
 %if 0%{?rhel} > 6 || 0%{?fedora} <= 24
-install -pm 0644 %{SOURCE5} $RPM_BUILD_ROOT%{_sysconfdir}/X11/xorg.conf.d
+install -pm 0644 %{SOURCE5} %{buildroot}%{_sysconfdir}/X11/xorg.conf.d
 %endif
 %if 0%{?rhel} == 6
-install -pm 0644 %{SOURCE3} $RPM_BUILD_ROOT%{_sysconfdir}/X11/xorg.conf.nvidia
+install -pm 0644 %{SOURCE3} %{buildroot}%{_sysconfdir}/X11/xorg.conf.nvidia
 %endif
 %if 0%{?fedora} <= 24
-install -pm 0644 %{SOURCE2} $RPM_BUILD_ROOT%{_sysconfdir}/X11/xorg.conf.d
-sed -i -e 's|@LIBDIR@|%{_libdir}|g' $RPM_BUILD_ROOT%{_sysconfdir}/X11/xorg.conf.d/99-nvidia.conf
-touch -r %{SOURCE2} $RPM_BUILD_ROOT%{_sysconfdir}/X11/xorg.conf.d/99-nvidia.conf
+install -pm 0644 %{SOURCE2} %{buildroot}%{_sysconfdir}/X11/xorg.conf.d
+sed -i -e 's|@LIBDIR@|%{_libdir}|g' %{buildroot}%{_sysconfdir}/X11/xorg.conf.d/99-nvidia.conf
+touch -r %{SOURCE2} %{buildroot}%{_sysconfdir}/X11/xorg.conf.d/99-nvidia.conf
 %endif
 # Comment Xorg abi override
-#install -pm 0644 %{SOURCE11} $RPM_BUILD_ROOT%{_sysconfdir}/X11/xorg.conf.d
+#install -pm 0644 %{SOURCE11} %{buildroot}%{_sysconfdir}/X11/xorg.conf.d
 
 # Fix desktop file and validate
 sed -i -e 's|__UTILS_PATH__/||g' -e 's|__PIXMAP_PATH__/||g' nvidia-settings.desktop
 sed -i -e 's|nvidia-settings.png|nvidia-settings|g' nvidia-settings.desktop
 desktop-file-install --vendor "" \
-    --dir $RPM_BUILD_ROOT%{_datadir}/applications/ \
+    --dir %{buildroot}%{_datadir}/applications/ \
     nvidia-settings.desktop
 
 #Alternate-install-present is checked by the nvidia .run
-install -p -m 0644 %{SOURCE7}            $RPM_BUILD_ROOT%{_nvidia_libdir}
+install -p -m 0644 %{SOURCE7}            %{buildroot}%{_nvidia_libdir}
 
 #install the NVIDIA supplied application profiles
-mkdir -p $RPM_BUILD_ROOT%{_datadir}/nvidia
-install -p -m 0644 nvidia-application-profiles-%{version}-{rc,key-documentation} $RPM_BUILD_ROOT%{_datadir}/nvidia
+mkdir -p %{buildroot}%{_datadir}/nvidia
+install -p -m 0644 nvidia-application-profiles-%{version}-{rc,key-documentation} %{buildroot}%{_datadir}/nvidia
 
 #Install the output class configuration file - xorg-server >= 1.16
 %if 0%{?fedora} >= 25
-mkdir -p $RPM_BUILD_ROOT%{_datadir}/X11/xorg.conf.d
-install -pm 0644 %{SOURCE10} $RPM_BUILD_ROOT%{_datadir}/X11/xorg.conf.d/nvidia.conf
-sed -i -e 's|@LIBDIR@|%{_libdir}|g' $RPM_BUILD_ROOT%{_datadir}/X11/xorg.conf.d/nvidia.conf
-touch -r %{SOURCE10} $RPM_BUILD_ROOT%{_datadir}/X11/xorg.conf.d/nvidia.conf
+mkdir -p %{buildroot}%{_datadir}/X11/xorg.conf.d
+install -pm 0644 %{SOURCE10} %{buildroot}%{_datadir}/X11/xorg.conf.d/nvidia.conf
+sed -i -e 's|@LIBDIR@|%{_libdir}|g' %{buildroot}%{_datadir}/X11/xorg.conf.d/nvidia.conf
+touch -r %{SOURCE10} %{buildroot}%{_datadir}/X11/xorg.conf.d/nvidia.conf
 %endif
 %if 0%{?rhel} == 7 || 0%{?fedora} == 24
-mkdir -p $RPM_BUILD_ROOT%{_datadir}/X11/xorg.conf.d
-install -pm 0644 %{SOURCE8} $RPM_BUILD_ROOT%{_datadir}/X11/xorg.conf.d/nvidia.conf
+mkdir -p %{buildroot}%{_datadir}/X11/xorg.conf.d
+install -pm 0644 %{SOURCE8} %{buildroot}%{_datadir}/X11/xorg.conf.d/nvidia.conf
 %endif
 
 #Install the initscript
 tar jxf nvidia-persistenced-init.tar.bz2
 %if 0%{?rhel} > 6 || 0%{?fedora}
-mkdir -p $RPM_BUILD_ROOT%{_unitdir}
+mkdir -p %{buildroot}%{_unitdir}
 install -pm 0644 nvidia-persistenced-init/systemd/nvidia-persistenced.service.template \
-  $RPM_BUILD_ROOT%{_unitdir}/nvidia-persistenced.service
+  %{buildroot}%{_unitdir}/nvidia-persistenced.service
 #Change the daemon running owner
-sed -i -e "s/__USER__/root/" $RPM_BUILD_ROOT%{_unitdir}/nvidia-persistenced.service
+sed -i -e "s/__USER__/root/" %{buildroot}%{_unitdir}/nvidia-persistenced.service
 %endif
 
 #Create the default nvidia config directory
-mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/nvidia
+mkdir -p %{buildroot}%{_sysconfdir}/nvidia
 
 #Ghost Xorg nvidia.conf file
-touch $RPM_BUILD_ROOT%{_sysconfdir}/X11/xorg.conf.d/nvidia.conf
+touch %{buildroot}%{_sysconfdir}/X11/xorg.conf.d/nvidia.conf
 
 #Install the nvidia kernel modules sources archive
-mkdir -p $RPM_BUILD_ROOT%{_datadir}/nvidia-kmod-%{version}
-tar Jcf $RPM_BUILD_ROOT%{_datadir}/nvidia-kmod-%{version}/nvidia-kmod-%{version}-%{_target_cpu}.tar.xz kernel
+mkdir -p %{buildroot}%{_datadir}/nvidia-kmod-%{version}
+tar Jcf %{buildroot}%{_datadir}/nvidia-kmod-%{version}/nvidia-kmod-%{version}-%{_target_cpu}.tar.xz kernel
 
 #Add autostart file for nvidia-settings to load user config
-install -D -p -m 0644 %{SOURCE9} $RPM_BUILD_ROOT%{_sysconfdir}/xdg/autostart/nvidia-settings.desktop
+install -D -p -m 0644 %{SOURCE9} %{buildroot}%{_sysconfdir}/xdg/autostart/nvidia-settings.desktop
 
 %if 0%{?fedora} >= 25
 # install AppData and add modalias provides
-mkdir -p $RPM_BUILD_ROOT%{_datadir}/appdata/
-install -pm 0644 %{SOURCE12} $RPM_BUILD_ROOT%{_datadir}/appdata/
-fn=$RPM_BUILD_ROOT%{_datadir}/appdata/xorg-x11-drv-nvidia.metainfo.xml
+mkdir -p %{buildroot}%{_datadir}/appdata/
+install -pm 0644 %{SOURCE12} %{buildroot}%{_datadir}/appdata/
+fn=%{buildroot}%{_datadir}/appdata/xorg-x11-drv-nvidia.metainfo.xml
 %{SOURCE13} README.txt "NVIDIA GEFORCE GPUS" | xargs appstream-util add-provide ${fn} modalias
 %{SOURCE13} README.txt "NVIDIA QUADRO GPUS" | xargs appstream-util add-provide ${fn} modalias
 %{SOURCE13} README.txt "NVIDIA NVS GPUS" | xargs appstream-util add-provide ${fn} modalias
