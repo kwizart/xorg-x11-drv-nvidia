@@ -263,12 +263,12 @@ install -D -p -m 0755 nvidia_drv.so $RPM_BUILD_ROOT%{_libdir}/xorg/modules/drive
 install    -m 0755         -d $RPM_BUILD_ROOT%{_sysconfdir}/OpenCL/vendors/
 install -p -m 0644 nvidia.icd $RPM_BUILD_ROOT%{_sysconfdir}/OpenCL/vendors/
 # Vulkan config
-install    -m 0755         -d $RPM_BUILD_ROOT%{_sysconfdir}/vulkan/icd.d/
-install -p -m 0644 nvidia_icd.json $RPM_BUILD_ROOT%{_sysconfdir}/vulkan/icd.d/
+install    -m 0755         -d $RPM_BUILD_ROOT%{_datadir}/vulkan/icd.d/
+install -p -m 0644 nvidia_icd.json $RPM_BUILD_ROOT%{_datadir}/vulkan/icd.d/
 %endif
 # EGL config
-install    -m 0755         -d $RPM_BUILD_ROOT%{_sysconfdir}/glvnd/egl_vendor.d/
-install -p -m 0644 10_nvidia.json $RPM_BUILD_ROOT%{_sysconfdir}/glvnd/egl_vendor.d/
+install    -m 0755         -d $RPM_BUILD_ROOT%{_datadir}/glvnd/egl_vendor.d/
+install -p -m 0644 10_nvidia.json $RPM_BUILD_ROOT%{_datadir}/glvnd/egl_vendor.d/
 
 # ld.so.conf.d file
 %if 0%{?rhel} > 6 || 0%{?fedora} <= 24
@@ -445,9 +445,9 @@ fi ||:
 %doc nvidiapkg/nvidia-application-profiles-%{version}-rc
 %doc nvidiapkg/html
 %ifarch x86_64 i686
-%config %{_sysconfdir}/vulkan/icd.d/nvidia_icd.json
+%{_datadir}/vulkan/icd.d/nvidia_icd.json
 %endif
-%config %{_sysconfdir}/glvnd/egl_vendor.d/10_nvidia.json
+%{_datadir}/glvnd/egl_vendor.d/10_nvidia.json
 %dir %{_sysconfdir}/nvidia
 %ghost  %{_sysconfdir}/X11/xorg.conf.d/nvidia.conf
 %if 0%{?rhel} > 6 || 0%{?fedora} <= 24
